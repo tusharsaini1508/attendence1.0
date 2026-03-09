@@ -2,9 +2,10 @@ import base64
 import csv
 import io
 import os
-from datetime import date, datetime, timedelta
+from datetime import date, datetime, timedelta, timezone
 from functools import wraps
 from pathlib import Path
+from zoneinfo import ZoneInfo
 
 from flask import (
     Flask,
@@ -33,6 +34,11 @@ app.config["SECRET_KEY"] = os.environ.get("SECRET_KEY", "change-this-in-producti
 app.config["MAX_CONTENT_LENGTH"] = 7 * 1024 * 1024
 app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 
+APP_TIMEZONE = os.environ.get("APP_TIMEZONE", "Asia/Kolkata")
+try:
+    LOCAL_TZ = ZoneInfo(APP_TIMEZONE)
+except Exception:
+    LOCAL_TZ = timezone.utc
 
 def _database_url() -> str:
     env_url = os.environ.get("DATABASE_URL", "").strip()
@@ -125,13 +131,18 @@ def _run_legacy_migrations() -> None:
 
 
 def now_utc() -> datetime:
-    return datetime.utcnow()
+    # Store all timestamps in UTC (naive), convert to local timezone for display.
+    return datetime.now(timezone.utc).replace(tzinfo=None)
 
 
-def day_range_utc(value: datetime):
-    start = value.replace(hour=0, minute=0, second=0, microsecond=0)
-    end = start + timedelta(days=1)
-    return start, end
+def local_day_range_as_utc(value_utc_naive: datetime):
+    utc_aware = value_utc_naive.replace(tzinfo=timezone.utc)
+    local_now = utc_aware.astimezone(LOCAL_TZ)
+    local_start = local_now.replace(hour=0, minute=0, second=0, microsecond=0)
+    local_end = local_start + timedelta(days=1)
+    start_utc = local_start.astimezone(timezone.utc).replace(tzinfo=None)
+    end_utc = local_end.astimezone(timezone.utc).replace(tzinfo=None)
+    return start_utc, end_utc
 
 
 def current_user():
@@ -188,8 +199,9 @@ def format_dt(dt_value: datetime) -> str:
         return ""
     if isinstance(dt_value, str):
         return dt_value
-    return dt_value.strftime("%Y-%m-%d %H:%M:%S")
-
+    dt_utc = dt_value.replace(tzinfo=timezone.utc)
+    local_dt = dt_utc.astimezone(LOCAL_TZ)
+    return local_dt.strftime("%Y-%m-%d %H:%M:%S")
 
 def attendance_to_dict(entry: Attendance):
     photo_src = entry.photo_data
@@ -303,7 +315,7 @@ def dashboard():
         return redirect(url_for("login"))
 
     now_value = now_utc()
-    start_day, end_day = day_range_utc(now_value)
+    start_day, end_day = local_day_range_as_utc(now_value)
 
     if user.role == "admin":
         stats = {
