@@ -36,6 +36,7 @@ If `DATABASE_URL` is not set, local SQLite (`data/attendance.db`) is used automa
 4. Set environment variables in Project Settings:
    - `DATABASE_URL` = your Vercel Postgres connection string
    - `SECRET_KEY` = long random secret string
+   - `APP_TIMEZONE` = your timezone (example: `Asia/Kolkata`)
 5. Deploy.
 
 This project already includes:
