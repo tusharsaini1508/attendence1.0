@@ -1,0 +1,28 @@
+{% extends "base.html" %}
+{% block title %}Login | AttendFlow{% endblock %}
+{% block content %}
+<section class="auth-section">
+  <div class="auth-card">
+    <h1>Sign in</h1>
+    <p class="auth-subtitle">Login to mark attendance or manage records.</p>
+
+    <form method="post" class="auth-form">
+      <label for="username">Username</label>
+      <input id="username" name="username" type="text" required placeholder="Enter username" />
+
+      <label for="password">Password</label>
+      <input id="password" name="password" type="password" required placeholder="Enter password" />
+
+      <button class="btn btn-primary btn-block" type="submit">Login</button>
+    </form>
+
+    <p class="auth-note">
+      New user?
+      <a href="{{ url_for('register') }}">Create an account</a>
+    </p>
+    <p class="auth-note small">
+      Default admin: <code>admin</code> / <code>Admin@123</code>
+    </p>
+  </div>
+</section>
+{% endblock %}

@@ -1,0 +1,51 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{% block title %}Attendance System{% endblock %}</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;700;800&family=Space+Grotesk:wght@600;700&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}" />
+  </head>
+  <body>
+    <div class="bg-layer"></div>
+    <header class="site-header">
+      <div class="shell header-inner">
+        <a class="brand" href="{{ url_for('home') }}">
+          <span class="brand-badge">AT</span>
+          <span class="brand-text">AttendFlow</span>
+        </a>
+        {% if session_user %}
+        <nav class="header-nav">
+          <span class="role-pill role-{{ session_user['role'] }}">
+            {{ session_user['role']|upper }}
+          </span>
+          <span class="user-pill">{{ session_user["full_name"] }}</span>
+          <a class="btn btn-soft" href="{{ url_for('logout') }}">Logout</a>
+        </nav>
+        {% endif %}
+      </div>
+    </header>
+
+    <main class="shell page-content">
+      {% with messages = get_flashed_messages(with_categories=true) %}
+      {% if messages %}
+      <div class="flash-wrap">
+        {% for category, message in messages %}
+        <div class="flash flash-{{ category }}">{{ message }}</div>
+        {% endfor %}
+      </div>
+      {% endif %}
+      {% endwith %}
+
+      {% block content %}{% endblock %}
+    </main>
+
+    {% block scripts %}{% endblock %}
+  </body>
+</html>

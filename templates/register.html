@@ -1,0 +1,35 @@
+{% extends "base.html" %}
+{% block title %}Register | AttendFlow{% endblock %}
+{% block content %}
+<section class="auth-section">
+  <div class="auth-card">
+    <h1>Create account</h1>
+    <p class="auth-subtitle">Register as a team member to submit attendance.</p>
+
+    <form method="post" class="auth-form">
+      <label for="full_name">Full name</label>
+      <input id="full_name" name="full_name" type="text" required placeholder="Enter full name" />
+
+      <label for="username">Username</label>
+      <input id="username" name="username" type="text" required placeholder="Choose username" />
+
+      <label for="password">Password</label>
+      <input
+        id="password"
+        name="password"
+        type="password"
+        minlength="6"
+        required
+        placeholder="At least 6 characters"
+      />
+
+      <button class="btn btn-primary btn-block" type="submit">Create account</button>
+    </form>
+
+    <p class="auth-note">
+      Already have an account?
+      <a href="{{ url_for('login') }}">Sign in</a>
+    </p>
+  </div>
+</section>
+{% endblock %}

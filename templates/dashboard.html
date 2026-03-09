@@ -1,0 +1,172 @@
+{% extends "base.html" %}
+{% block title %}Dashboard | AttendFlow{% endblock %}
+{% block content %}
+<section class="stats-grid">
+  {% if is_admin %}
+  <article class="stat-card">
+    <p>Total Users</p>
+    <h2>{{ stats["total_users"] }}</h2>
+  </article>
+  <article class="stat-card">
+    <p>Total Records</p>
+    <h2>{{ stats["total_records"] }}</h2>
+  </article>
+  <article class="stat-card">
+    <p>Today Records</p>
+    <h2>{{ stats["today_records"] }}</h2>
+  </article>
+  {% else %}
+  <article class="stat-card">
+    <p>Your Total Records</p>
+    <h2>{{ stats["total_records"] }}</h2>
+  </article>
+  <article class="stat-card">
+    <p>Your Today Status</p>
+    <h2>{{ "Marked" if stats["today_records"] > 0 else "Pending" }}</h2>
+  </article>
+  <article class="stat-card">
+    <p>Entries Today</p>
+    <h2>{{ stats["today_records"] }}</h2>
+  </article>
+  {% endif %}
+</section>
+
+<section class="dashboard-grid">
+  <article class="panel form-panel">
+    <div class="panel-head">
+      <h2>Mark Attendance</h2>
+      <p>Capture your photo, fetch location, and submit.</p>
+    </div>
+
+    <form id="attendance-form" class="attendance-form">
+      <label for="person_name">Person Name</label>
+      <input
+        id="person_name"
+        name="person_name"
+        type="text"
+        required
+        value="{{ user['full_name'] }}"
+        placeholder="Enter person name"
+      />
+
+      <div class="camera-block">
+        <div class="camera-view">
+          <video id="camera-stream" autoplay playsinline></video>
+          <img id="captured-preview" alt="Captured preview" />
+          <canvas id="camera-canvas" hidden></canvas>
+        </div>
+        <div class="camera-actions">
+          <button class="btn btn-soft" type="button" id="start-camera">Start Camera</button>
+          <button class="btn btn-soft" type="button" id="capture-photo">Capture</button>
+          <button class="btn btn-soft" type="button" id="retake-photo">Retake</button>
+        </div>
+      </div>
+
+      <div class="location-block">
+        <div class="location-top">
+          <label>Location</label>
+          <button class="btn btn-soft" type="button" id="fetch-location">Auto Fetch</button>
+        </div>
+        <p class="muted" id="location-status">Location not fetched yet.</p>
+        <input id="latitude" name="latitude" type="hidden" />
+        <input id="longitude" name="longitude" type="hidden" />
+        <input id="location_text" name="location_text" type="hidden" />
+      </div>
+
+      <button class="btn btn-primary btn-block" type="submit">Submit Attendance</button>
+      <p id="submit-feedback" class="muted"></p>
+    </form>
+  </article>
+
+  <article class="panel table-panel">
+    <div class="panel-head table-head">
+      <div>
+        <h2>{{ "Manage Attendance" if is_admin else "My Attendance History" }}</h2>
+        <p>{{ "All submitted attendance records" if is_admin else "Your latest submitted records" }}</p>
+      </div>
+      {% if is_admin %}
+      <a class="btn btn-primary" href="{{ url_for('export_attendance') }}">Export CSV</a>
+      {% endif %}
+    </div>
+
+    {% if is_admin %}
+    <input class="search-input" id="record-search" type="search" placeholder="Search by name, username, location..." />
+    {% endif %}
+
+    <div class="table-wrap">
+      <table id="records-table">
+        <thead>
+          <tr>
+            <th>Photo</th>
+            <th>Person Name</th>
+            {% if is_admin %}
+            <th>Submitted By</th>
+            {% endif %}
+            <th>Location</th>
+            <th>Timestamp</th>
+            {% if is_admin %}
+            <th>Action</th>
+            {% endif %}
+          </tr>
+        </thead>
+        <tbody>
+          {% for record in records %}
+          <tr class="record-row">
+            <td>
+              {% if record["photo_src"] %}
+              <a href="{{ record['photo_src'] }}" target="_blank">
+                <img
+                  class="table-photo"
+                  src="{{ record['photo_src'] }}"
+                  alt="Attendance photo"
+                />
+              </a>
+              {% else %}
+              <span class="muted">No photo</span>
+              {% endif %}
+            </td>
+            <td>{{ record["person_name"] }}</td>
+            {% if is_admin %}
+            <td>{{ record["user_full_name"] }} ({{ record["username"] }})</td>
+            {% endif %}
+            <td>
+              <a
+                href="https://www.google.com/maps?q={{ record['latitude'] }},{{ record['longitude'] }}"
+                target="_blank"
+              >
+                {{ record["location_text"] or (record["latitude"] ~ ", " ~ record["longitude"]) }}
+              </a>
+            </td>
+            <td>{{ record["created_at"] }}</td>
+            {% if is_admin %}
+            <td>
+              <form
+                method="post"
+                action="{{ url_for('delete_attendance', attendance_id=record['id']) }}"
+                onsubmit="return confirm('Delete this attendance record?');"
+              >
+                <button type="submit" class="btn btn-danger">Delete</button>
+              </form>
+            </td>
+            {% endif %}
+          </tr>
+          {% else %}
+          <tr>
+            <td colspan="{{ 6 if is_admin else 4 }}" class="no-data">No attendance records yet.</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </article>
+</section>
+{% endblock %}
+
+{% block scripts %}
+<script>
+  window.ATTENDANCE_CONFIG = {
+    endpoint: "{{ url_for('submit_attendance') }}"
+  };
+</script>
+<script src="{{ url_for('static', filename='js/attendance.js') }}"></script>
+{% endblock %}
