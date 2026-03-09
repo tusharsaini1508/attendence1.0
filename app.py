@@ -40,6 +40,7 @@ try:
 except Exception:
     LOCAL_TZ = timezone.utc
 
+
 def _database_url() -> str:
     env_url = os.environ.get("DATABASE_URL", "").strip()
     if not env_url:
@@ -102,8 +103,8 @@ def init_db() -> None:
         if not admin_exists:
             admin = User(
                 full_name="System Administrator",
-                username="SkillNet_admin",
-                password_hash=generate_password_hash("SkillNet@123"),
+                username="admin",
+                password_hash=generate_password_hash("Admin@123"),
                 role="admin",
             )
             db.session.add(admin)
@@ -202,6 +203,7 @@ def format_dt(dt_value: datetime) -> str:
     dt_utc = dt_value.replace(tzinfo=timezone.utc)
     local_dt = dt_utc.astimezone(LOCAL_TZ)
     return local_dt.strftime("%Y-%m-%d %H:%M:%S")
+
 
 def attendance_to_dict(entry: Attendance):
     photo_src = entry.photo_data
@@ -429,7 +431,7 @@ def submit_attendance():
         return jsonify({"ok": False, "error": "Session expired. Please login again."}), 401
 
     now_value = now_utc()
-    start_day, end_day = day_range_utc(now_value)
+    start_day, end_day = local_day_range_as_utc(now_value)
 
     already_marked = Attendance.query.filter(
         Attendance.user_id == user.id,
