@@ -96,8 +96,8 @@ def init_db() -> None:
         if not admin_exists:
             admin = User(
                 full_name="System Administrator",
-                username="admin",
-                password_hash=generate_password_hash("Admin@123"),
+                username="SkillNet_admin",
+                password_hash=generate_password_hash("SkillNet@123"),
                 role="admin",
             )
             db.session.add(admin)
